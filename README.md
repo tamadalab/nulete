@@ -5,3 +5,36 @@
 しかし，プログラミング演習科目は多くの学生を相手に行われるものであり，授業ごとに課される練習問題の採点には膨大な時間がかかるため，教員は採点作業に追われて，授業の質を高める作業に当てる時間を確保することが難しい．
 Github Classroomを含め，採点作業を自動化するツールも存在するが，採点用のテストプログラムは教員が作成しなければならない．
 そこで，模範解答プログラムとテストケースから採点用のテスト生成するツール「nulete」を提案する．
+
+# 実行例
+- ディレクトリ構造を生成する例
+```
+$ mkdir lesson01
+$ cd lesson01
+$ nulete init
+$ tree
+.
+├── build.gradle
+└── src
+   ├── main
+   │   └── java
+   └── test
+       └── java
+```
+
+- テストを生成する例
+```
+$ nulete gentests --source-dir=../answers/ --testcase-dir=../testcases/
+$ tree
+.
+├── build.gradle
+└── src
+    ├── main
+    │   └── java
+    └── test
+        └── java
+            ├── FugaTest.java
+            ├── HogeTest.java
+            └── PiyoTest.java
+```
+
