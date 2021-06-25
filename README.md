@@ -38,3 +38,16 @@ $ tree
             └── PiyoTest.java
 ```
 
+# 入出力仕様
+```
+usage: nulete [options] [command] [select-options]
+OPTIONS
+   -h, --help        ヘルプの表示
+   -v, --version     バージョンの表示
+COMMAND
+   init              ディレクトリ構造の生成
+   gentests          テストの生成
+SELECT-OPTIONS
+   --source-dir      模範解答プログラムの指定
+   --testcase-dir    テストケースの指定
+```
