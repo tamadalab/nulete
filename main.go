@@ -1,9 +1,9 @@
 package main
 
 import (
-  "github.com/tamadalab/nulete/cmd"
+	"github.com/tamadalab/nulete/cmd"
 )
 
 func main() {
-  cmd.Execute()
+	cmd.Execute()
 }
