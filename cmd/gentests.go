@@ -28,8 +28,8 @@ var (
 	}
 )
 
-//go:embed assets/GenerateTest.java
-var generateTestJavaData []byte
+//go:embed assets/gentests.jar
+var gentestsJarData []byte
 
 /*
 testcaseDirが指定されていない場合、sourceDirと同じにする。
@@ -85,9 +85,9 @@ func gentestsCmdRun() error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	generateTestJavaPath := filepath.Join(tmpDir, "GenerateTest.java")
+	gentestsJarPath := filepath.Join(tmpDir, "gentests.jar")
 
-	if err := os.WriteFile(generateTestJavaPath, generateTestJavaData, 0644); err != nil {
+	if err := os.WriteFile(gentestsJarPath, gentestsJarData, 0644); err != nil {
 		return err
 	}
 
@@ -97,7 +97,7 @@ func gentestsCmdRun() error {
 	}
 
 	sourceNames := make([]string, 0)
-	args := []string{"-d", tmpDir, generateTestJavaPath}
+	args := []string{"-d", tmpDir}
 	for _, sourceFile := range sourceFiles {
 		if name := sourceFile.Name(); filepath.Ext(name) == ".java" {
 			sourceNames = append(sourceNames, name)
@@ -128,7 +128,7 @@ func gentestsCmdRun() error {
 		return err
 	}
 
-	java := exec.Command("java", "GenerateTest")
+	java := exec.Command("java", "-jar", "gentests.jar")
 	stdoutStderr, err := java.CombinedOutput()
 	fmt.Printf("%s\n", stdoutStderr)
 	if err != nil {
