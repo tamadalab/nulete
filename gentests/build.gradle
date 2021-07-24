@@ -1,0 +1,11 @@
+plugins {
+    id "java"
+}
+
+compileJava.options.encoding = "UTF-8"
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'GenerateTest'
+    }
+}
