@@ -1,3 +1,7 @@
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -7,7 +11,9 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,19 +23,33 @@ public class GenerateTest {
             List<Class> classes = this.getClasses();
             for (Class c : classes) {
                 System.out.printf("Class : %s\n", c.getName());
-                try {
-                    for (Method m : c.getDeclaredMethods()) {
-                        System.out.printf("Method : %s\n", m.getName());
-                    }
-                } catch (SecurityException e) {
-                    e.printStackTrace();
-                    System.exit(1);
+
+                for (Method m : c.getDeclaredMethods()) {
+                    System.out.printf("Method : %s\n", m.getName());
                 }
+
                 System.out.println();
             }
 
             String[] classNames = classes.stream().map(c -> c.getName()).toArray(String[]::new);
             this.createEmptyFiles(classNames);
+
+            for (Map.Entry<String, JSONArray> testcase : this.getTestCases().entrySet()) {
+                String targetClassName = testcase.getKey();
+                JSONArray jsonArr = testcase.getValue();
+
+                System.out.printf("Class: %s\n", targetClassName);
+
+                for (Object obj : jsonArr) {
+                    JSONObject jsonObj = (JSONObject) obj;
+
+                    String methodName = jsonObj.getString("method");
+                    JSONArray args = jsonObj.getJSONArray("args");
+
+                    System.out.printf("method: %s\n", methodName);
+                    System.out.printf("args: %s\n", args.toString());
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -64,14 +84,28 @@ public class GenerateTest {
         Path[] filePaths =
                 Stream.of(classNames).map(name -> Path.of(name + "Test.java")).toArray(Path[]::new);
 
-        try {
-            for (Path filePath : filePaths) {
-                Files.createFile(filePath);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+        for (Path filePath : filePaths) {
+            Files.createFile(filePath);
         }
+    }
+
+    private Map<String, JSONArray> getTestCases() throws IOException, JSONException {
+        File currendDir = new File(".");
+        Map<String, JSONArray> testcases = new HashMap<>();
+        for (String jsonFileName : this.getJsonFileNames(currendDir)) {
+            String targetClassName = jsonFileName.replace(".json", "");
+            String jsonString = Files.readString(Path.of(jsonFileName));
+            testcases.put(targetClassName, new JSONArray(jsonString));
+        }
+
+        return testcases;
+    }
+
+    private List<String> getJsonFileNames(File dir) throws IOException {
+        return Stream.of(dir.listFiles())
+                .map(file -> file.getName())
+                .filter(name -> name.endsWith(".json"))
+                .collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
