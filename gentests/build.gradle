@@ -1,8 +1,17 @@
 plugins {
     id "java"
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 compileJava.options.encoding = "UTF-8"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.json:json:20210307'
+}
 
 jar {
     manifest {
