@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -16,68 +17,81 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.io.PrintStream;
+import java.io.ByteArrayOutputStream;
 
 public class GenerateTest {
     private void run() {
+        PrintStream defaultStdOut = System.out;
         try {
-            List<Class> classes = this.getClasses();
-            for (Class c : classes) {
-                System.out.printf("Class : %s\n", c.getName());
+            TargetClassLoader loader = new TargetClassLoader();
+            Map<String, JSONArray> testcases = this.getTestCases();
+
+            for (Map.Entry<String, JSONArray> ety : testcases.entrySet()) {
+                String className = ety.getKey();
+                JSONArray testcase = ety.getValue();
+
+                System.out.printf("  Class: %s\n", className);
+
+                Class<?> c = loader.loadClass(className);
+                Object instance = c.getDeclaredConstructor().newInstance();
 
                 for (Method m : c.getDeclaredMethods()) {
-                    System.out.printf("Method : %s\n", m.getName());
+                    String methodName = m.getName();
+                    Boolean isStatic = Modifier.isStatic(m.getModifiers());
+                    m.setAccessible(true);
+
+                    System.out.printf("    Method: %s\n", methodName);
+
+                    for (Object o : testcase) {
+                        JSONObject jsonObj = (JSONObject) o;
+                        String targetMethodName = jsonObj.getString("method");
+
+                        if (!methodName.equals(targetMethodName)) {
+                            continue;
+                        }
+
+                        Object[] args = ArgsParser.parseMethodArgs(m, jsonObj.getJSONArray("args"));
+
+                        System.out.printf("      Args:");
+                        for (Object arg: args) {
+                            if (arg.getClass().isArray()) {
+                                System.out.printf("[");
+                                for (Object item: (Object[]) arg) {
+                                    System.out.printf("%s,", item);
+                                }
+                                System.out.printf("],");
+                            } else {
+                                System.out.printf("%s,", arg);
+                            }
+                        }
+                        System.out.println();
+
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        PrintStream ps = new PrintStream(baos);
+                        System.setOut(ps);
+
+                        if (isStatic) {
+                            m.invoke(null, args);
+                        } else {
+                            m.invoke(instance, args);
+                        }
+
+                        System.setOut(defaultStdOut);
+
+                        System.out.println(baos.toString());
+                    }
                 }
 
                 System.out.println();
             }
 
-            String[] classNames = classes.stream().map(c -> c.getName()).toArray(String[]::new);
-            this.createEmptyFiles(classNames);
-
-            for (Map.Entry<String, JSONArray> testcase : this.getTestCases().entrySet()) {
-                String targetClassName = testcase.getKey();
-                JSONArray jsonArr = testcase.getValue();
-
-                System.out.printf("Class: %s\n", targetClassName);
-
-                for (Object obj : jsonArr) {
-                    JSONObject jsonObj = (JSONObject) obj;
-
-                    String methodName = jsonObj.getString("method");
-                    JSONArray args = jsonObj.getJSONArray("args");
-
-                    System.out.printf("method: %s\n", methodName);
-                    System.out.printf("args: %s\n", args.toString());
-                }
-            }
+            this.createEmptyFiles(testcases.keySet().toArray(new String[0]));
         } catch (Exception e) {
+            System.setOut(defaultStdOut);
             e.printStackTrace();
             System.exit(1);
         }
-    }
-
-    private List<Class> getClasses()
-            throws MalformedURLException, ClassNotFoundException, IOException {
-        File currentDir = new File(".");
-        List<String> classNames = this.getClassNames(currentDir);
-        List<Class> classes = new ArrayList<>();
-        URL[] urls = new URL[] {currentDir.toURI().toURL()};
-
-        try (URLClassLoader urlcl = new URLClassLoader(urls)) {
-            for (String className : classNames) {
-                classes.add(urlcl.loadClass(className));
-            }
-        }
-
-        return classes;
-    }
-
-    private List<String> getClassNames(File dir) {
-        return Stream.of(dir.listFiles())
-                .map(file -> file.getName())
-                .filter(name -> name.endsWith(".class"))
-                .map(name -> name.replace(".class", ""))
-                .collect(Collectors.toList());
     }
 
     private void createEmptyFiles(String[] classNames) throws IOException {
