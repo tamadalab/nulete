@@ -90,9 +90,9 @@ public class GenerateTest {
     }
 
     private Map<String, JSONArray> getTestCases() throws IOException, JSONException {
-        File currendDir = new File(".");
+        File currentDir = new File(".");
         Map<String, JSONArray> testcases = new HashMap<>();
-        for (String jsonFileName : this.getJsonFileNames(currendDir)) {
+        for (String jsonFileName : this.getJsonFileNames(currentDir)) {
             String targetClassName = jsonFileName.replace(".json", "");
             String jsonString = Files.readString(Path.of(jsonFileName));
             testcases.put(targetClassName, new JSONArray(jsonString));
