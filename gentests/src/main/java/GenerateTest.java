@@ -67,9 +67,7 @@ public class GenerateTest {
                         }
                         System.out.println();
 
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        PrintStream ps = new PrintStream(baos);
-                        System.setOut(ps);
+                        ByteArrayOutputStream baos = this.stdOutCaptureStart();
 
                         if (isStatic) {
                             m.invoke(null, args);
@@ -120,6 +118,12 @@ public class GenerateTest {
                 .map(file -> file.getName())
                 .filter(name -> name.endsWith(".json"))
                 .collect(Collectors.toList());
+    }
+
+    private ByteArrayOutputStream stdOutCaptureStart() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(baos));
+        return baos;
     }
 
     public static void main(String[] args) {
