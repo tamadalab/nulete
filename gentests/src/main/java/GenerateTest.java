@@ -2,23 +2,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.io.PrintStream;
-import java.io.ByteArrayOutputStream;
 
 public class GenerateTest {
     private void run() {
@@ -31,8 +27,6 @@ public class GenerateTest {
                 String className = ety.getKey();
                 JSONArray testcase = ety.getValue();
 
-                System.out.printf("  Class: %s\n", className);
-
                 Class<?> c = loader.loadClass(className);
                 Object instance = c.getDeclaredConstructor().newInstance();
 
@@ -40,8 +34,6 @@ public class GenerateTest {
                     String methodName = m.getName();
                     Boolean isStatic = Modifier.isStatic(m.getModifiers());
                     m.setAccessible(true);
-
-                    System.out.printf("    Method: %s\n", methodName);
 
                     for (Object o : testcase) {
                         JSONObject jsonObj = (JSONObject) o;
@@ -53,20 +45,6 @@ public class GenerateTest {
 
                         Object[] args = ArgsParser.parseMethodArgs(m, jsonObj.getJSONArray("args"));
 
-                        System.out.printf("      Args:");
-                        for (Object arg: args) {
-                            if (arg.getClass().isArray()) {
-                                System.out.printf("[");
-                                for (Object item: (Object[]) arg) {
-                                    System.out.printf("%s,", item);
-                                }
-                                System.out.printf("],");
-                            } else {
-                                System.out.printf("%s,", arg);
-                            }
-                        }
-                        System.out.println();
-
                         ByteArrayOutputStream baos = this.stdOutCaptureStart();
 
                         if (isStatic) {
@@ -76,8 +54,6 @@ public class GenerateTest {
                         }
 
                         System.setOut(defaultStdOut);
-
-                        System.out.println(baos.toString());
                     }
                 }
 
