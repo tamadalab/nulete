@@ -30,10 +30,14 @@ public class GenerateTest {
                 Class<?> c = loader.loadClass(className);
                 Object instance = c.getDeclaredConstructor().newInstance();
 
+                TestClassBuilder builder = new TestClassBuilder(className);
+
                 for (Method m : c.getDeclaredMethods()) {
                     String methodName = m.getName();
                     Boolean isStatic = Modifier.isStatic(m.getModifiers());
                     m.setAccessible(true);
+
+                    InvokeResults results = new InvokeResults(methodName, isStatic);
 
                     for (Object o : testcase) {
                         JSONObject jsonObj = (JSONObject) o;
@@ -54,26 +58,20 @@ public class GenerateTest {
                         }
 
                         System.setOut(defaultStdOut);
+
+                        results.add(args, baos.toString());
                     }
+
+                    builder.addTestMethod(results);
                 }
 
-                System.out.println();
+                Files.writeString(Path.of(className + "Test.java"), builder.toString());
             }
 
-            this.createEmptyFiles(testcases.keySet().toArray(new String[0]));
         } catch (Exception e) {
             System.setOut(defaultStdOut);
             e.printStackTrace();
             System.exit(1);
-        }
-    }
-
-    private void createEmptyFiles(String[] classNames) throws IOException {
-        Path[] filePaths =
-                Stream.of(classNames).map(name -> Path.of(name + "Test.java")).toArray(Path[]::new);
-
-        for (Path filePath : filePaths) {
-            Files.createFile(filePath);
         }
     }
 
