@@ -1,4 +1,4 @@
 
     @Test
-    void %s() {%s}
+    void %s() {%s    }
 
