@@ -65,10 +65,10 @@ func gentestsCmdPreRun() error {
 
 /*
 tmpディレクトリを作成する。tmpはreturn時に削除される。
-tmp内にGenerateTest.javaを作る。
-tmp内にsourceDir内のjavaファイルとGenerateTest.javaをコンパイルしたclassファイルを出力する。
-tmp内にtestcaseDir内のjsonファイルのシンボリックリンクを作る。
-tmp内に入り、java GenerateTestを実行する。
+tmp内にgentests.jarを作る。
+tmp内にsourceDir内のjavaファイルをコンパイルしたclassファイルを出力する。
+tmp内にtestcaseDir内のjsonファイルをコピーする。
+tmp内に入り、java -jar gentests.jarを実行する。
 生成された*Test.javaをsrc/test/javaへコピーする。
 
 tmpディレクトリをdeferで削除するため、os.Exit(cobra.CheckErr)による終了はしない。
