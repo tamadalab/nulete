@@ -3,6 +3,7 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -118,7 +119,7 @@ func gentestsCmdRun() error {
 
 	for _, testcaseFile := range testcaseFiles {
 		if name := testcaseFile.Name(); filepath.Ext(name) == ".json" {
-			if err := os.Symlink(filepath.Join(testcaseDir, name), filepath.Join(tmpDir, name)); err != nil {
+			if err := overwriteCopy(filepath.Join(testcaseDir, name), filepath.Join(tmpDir, name)); err != nil {
 				return err
 			}
 		}
@@ -138,9 +139,30 @@ func gentestsCmdRun() error {
 	outputDir := filepath.Join(firstDir, "src", "test", "java")
 	for _, sourceName := range sourceNames {
 		testName := strings.Replace(sourceName, ".java", "Test.java", 1)
-		if err := os.Link(filepath.Join(tmpDir, testName), filepath.Join(outputDir, testName)); err != nil {
+		if err := overwriteCopy(filepath.Join(tmpDir, testName), filepath.Join(outputDir, testName)); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func overwriteCopy(fromPath string, toPath string) error {
+	fromFile, err := os.Open(fromPath)
+	if err != nil {
+		return err
+	}
+	defer fromFile.Close()
+
+	toFile, err := os.Create(toPath)
+	if err != nil {
+		return err
+	}
+	defer toFile.Close()
+
+	_, err = io.Copy(toFile, fromFile)
+	if err != nil {
+		return err
 	}
 
 	return nil
