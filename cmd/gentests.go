@@ -32,6 +32,9 @@ var (
 //go:embed assets/gentests.jar
 var gentestsJarData []byte
 
+//go:embed assets/TestBase.java
+var testBaseJavaData []byte
+
 /*
 testcaseDirが指定されていない場合、sourceDirと同じにする。
 ホームディレクトリを示すチルダがある場合は展開する。
@@ -70,6 +73,7 @@ tmp内にsourceDir内のjavaファイルをコンパイルしたclassファイ�
 tmp内にtestcaseDir内のjsonファイルをコピーする。
 tmp内に入り、java -jar gentests.jarを実行する。
 生成された*Test.javaをsrc/test/javaへコピーする。
+src/test/java内にTestBase.javaを作る。
 
 tmpディレクトリをdeferで削除するため、os.Exit(cobra.CheckErr)による終了はしない。
 */
@@ -155,6 +159,12 @@ func gentestsCmdRun() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	testBaseJavaPath := filepath.Join(outputDir, "TestBase.java")
+
+	if err := os.WriteFile(testBaseJavaPath, testBaseJavaData, 0644); err != nil {
+		return err
 	}
 
 	return nil
