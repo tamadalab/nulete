@@ -97,18 +97,16 @@ func gentestsCmdRun() error {
 		return err
 	}
 
-	sourceNames := make([]string, 0)
 	args := []string{"-d", tmpDir}
 	for _, sourceFile := range sourceFiles {
 		if name := sourceFile.Name(); filepath.Ext(name) == ".java" {
-			sourceNames = append(sourceNames, name)
-			args = append(args, filepath.Join(sourceDir, sourceFile.Name()))
+			args = append(args, filepath.Join(sourceDir, name))
 		}
 	}
 
 	javac := exec.Command("javac", args...)
 	if stdoutStderr, err := javac.CombinedOutput(); err != nil {
-		fmt.Printf("%s\n", stdoutStderr)
+		fmt.Printf("%s", stdoutStderr)
 		return err
 	}
 
@@ -118,10 +116,15 @@ func gentestsCmdRun() error {
 	}
 
 	for _, testcaseFile := range testcaseFiles {
-		if name := testcaseFile.Name(); filepath.Ext(name) == ".json" {
-			if err := overwriteCopy(filepath.Join(testcaseDir, name), filepath.Join(tmpDir, name)); err != nil {
-				return err
-			}
+		name := testcaseFile.Name()
+
+		if filepath.Ext(name) != ".json" {
+			continue
+		}
+
+		err := overwriteCopy(filepath.Join(testcaseDir, name), filepath.Join(tmpDir, name))
+		if err != nil {
+			return err
 		}
 	}
 
@@ -130,16 +133,26 @@ func gentestsCmdRun() error {
 	}
 
 	java := exec.Command("java", "-jar", "gentests.jar")
-	stdoutStderr, err := java.CombinedOutput()
-	fmt.Printf("%s\n", stdoutStderr)
+	if stdoutStderr, err := java.CombinedOutput(); err != nil {
+		fmt.Printf("%s", stdoutStderr)
+		return err
+	}
+
+	tmpFiles, err := os.ReadDir(tmpDir)
 	if err != nil {
 		return err
 	}
 
 	outputDir := filepath.Join(firstDir, "src", "test", "java")
-	for _, sourceName := range sourceNames {
-		testName := strings.Replace(sourceName, ".java", "Test.java", 1)
-		if err := overwriteCopy(filepath.Join(tmpDir, testName), filepath.Join(outputDir, testName)); err != nil {
+	for _, tmpFile := range tmpFiles {
+		name := tmpFile.Name()
+
+		if !strings.HasSuffix(name, "Test.java") {
+			continue
+		}
+
+		err := overwriteCopy(filepath.Join(tmpDir, name), filepath.Join(outputDir, name))
+		if err != nil {
 			return err
 		}
 	}
