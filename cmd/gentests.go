@@ -96,17 +96,18 @@ func gentestsCmdRun() error {
 		return err
 	}
 
-	sourceFiles, err := os.ReadDir(sourceDir)
+	find := exec.Command("find", sourceDir, "-name", "*.java")
+	result, err := find.Output()
 	if err != nil {
 		return err
 	}
 
-	args := []string{"-d", tmpDir}
-	for _, sourceFile := range sourceFiles {
-		if name := sourceFile.Name(); filepath.Ext(name) == ".java" {
-			args = append(args, filepath.Join(sourceDir, name))
-		}
+	javaFilePaths := strings.Split(strings.TrimSuffix(string(result), "\n"), "\n")
+	if len(javaFilePaths) == 1 && javaFilePaths[0] == "" {
+		return fmt.Errorf("java file not found in %s", sourceDir)
 	}
+
+	args := append([]string{"-d", tmpDir}, javaFilePaths...)
 
 	javac := exec.Command("javac", args...)
 	if stdoutStderr, err := javac.CombinedOutput(); err != nil {
