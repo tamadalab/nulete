@@ -72,6 +72,7 @@ tmp内にgentests.jarを作る。
 tmp内にsourceDir内のjavaファイルをコンパイルしたclassファイルを出力する。
 tmp内にtestcaseDir内のjsonファイルをコピーする。
 tmp内に入り、java -jar gentests.jarを実行する。
+sourceDir内のjavaファイルをsrc/main/javaへコピーする。
 生成された*Test.javaをsrc/test/javaへコピーする。
 src/test/java内にTestBase.javaを作る。
 
@@ -115,22 +116,8 @@ func gentestsCmdRun() error {
 		return err
 	}
 
-	testcaseFiles, err := os.ReadDir(testcaseDir)
-	if err != nil {
+	if err := copyFiles(testcaseDir, tmpDir, func(name string) bool { return filepath.Ext(name) == ".json" }); err != nil {
 		return err
-	}
-
-	for _, testcaseFile := range testcaseFiles {
-		name := testcaseFile.Name()
-
-		if filepath.Ext(name) != ".json" {
-			continue
-		}
-
-		err := overwriteCopy(filepath.Join(testcaseDir, name), filepath.Join(tmpDir, name))
-		if err != nil {
-			return err
-		}
 	}
 
 	if err := os.Chdir(tmpDir); err != nil {
@@ -143,29 +130,39 @@ func gentestsCmdRun() error {
 		return err
 	}
 
-	tmpFiles, err := os.ReadDir(tmpDir)
+	mainDir := filepath.Join(firstDir, "src", "main", "java")
+	testDir := filepath.Join(firstDir, "src", "test", "java")
+
+	if err := copyFiles(sourceDir, mainDir, func(name string) bool { return filepath.Ext(name) == ".java" }); err != nil {
+		return err
+	}
+
+	if err := copyFiles(tmpDir, testDir, func(name string) bool { return strings.HasSuffix(name, "Test.java") }); err != nil {
+		return err
+	}
+
+	testBaseJavaPath := filepath.Join(testDir, "TestBase.java")
+
+	if err := os.WriteFile(testBaseJavaPath, testBaseJavaData, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func copyFiles(fromDirPath string, toDirPath string, filter func(string) bool) error {
+	fromFiles, err := os.ReadDir(fromDirPath)
 	if err != nil {
 		return err
 	}
 
-	outputDir := filepath.Join(firstDir, "src", "test", "java")
-	for _, tmpFile := range tmpFiles {
-		name := tmpFile.Name()
-
-		if !strings.HasSuffix(name, "Test.java") {
-			continue
+	for _, fromFile := range fromFiles {
+		if name := fromFile.Name(); !fromFile.IsDir() && filter(name) {
+			err := overwriteCopy(filepath.Join(fromDirPath, name), filepath.Join(toDirPath, name))
+			if err != nil {
+				return err
+			}
 		}
-
-		err := overwriteCopy(filepath.Join(tmpDir, name), filepath.Join(outputDir, name))
-		if err != nil {
-			return err
-		}
-	}
-
-	testBaseJavaPath := filepath.Join(outputDir, "TestBase.java")
-
-	if err := os.WriteFile(testBaseJavaPath, testBaseJavaData, 0644); err != nil {
-		return err
 	}
 
 	return nil
