@@ -5,6 +5,9 @@ plugins {
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
+compileJava.options.failOnError = false
+compileTestJava.options.failOnError = false
+
 repositories {
   mavenCentral()
 }
@@ -13,7 +16,6 @@ dependencies {
   testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.1"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
   implementation "com.google.guava:guava:30.0-jre"
-
 }
 
 test {
