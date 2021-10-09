@@ -19,10 +19,14 @@ var initCmd = &cobra.Command{
 //go:embed assets/build.gradle
 var buildGradleData []byte
 
+//go:embed assets/gitignore.txt
+var gitignoreData []byte
+
 func initCmdRun() {
 	cobra.CheckErr(os.MkdirAll(filepath.Join("src", "main", "java"), 0777))
 	cobra.CheckErr(os.MkdirAll(filepath.Join("src", "test", "java"), 0777))
 	cobra.CheckErr(os.WriteFile("build.gradle", buildGradleData, 0644))
+	cobra.CheckErr(os.WriteFile(".gitignore", gitignoreData, 0644))
 }
 
 func init() {
