@@ -29,10 +29,8 @@ public class InvokeResults {
                 String[] items =
                         Stream.of((String[]) arg).map(s -> "\"" + s + "\"").toArray(String[]::new);
                 argStrList.add(String.format("new String[] {%s}", String.join(", ", items)));
-            } else if (arg.getClass().equals(String.class)) {
-                argStrList.add("\"" + arg.toString() + "\"");
             } else {
-                argStrList.add(arg.toString());
+                argStrList.add(String.format("%s.valueOf(\"%s\")", arg.getClass().getSimpleName(), arg.toString()));
             }
         }
 
