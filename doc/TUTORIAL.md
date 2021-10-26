@@ -1,4 +1,11 @@
 # チュートリアル
+### nuleteのインストール
+1. Git, Go, Javaをインストールしておく。
+2. 以下のコマンドでnuleteをインストールする。
+    * `git clone https://github.com/tamadalab/nulete.git`
+    * `cd nulete`
+    * `make install`
+
 ### Githubアカウントを取得する
 1. [Githubのアカウント作成ページ](https://github.com/join)にアクセスする。
 2. ユーザーネームとメールアドレスとパスワードを入力し、「Create account」をクリックする。
@@ -36,9 +43,6 @@
 
 <img src="images/new_organization_complete.png" width="320px">
 
-### nuleteコマンドが使えるようにしておく
-未定
-
 ### classroomを作成する
 1. [Classroomのページ](https://classroom.github.com/classrooms)で「Create your first classroom」(既にclassroomがある場合は「New classroom」)をクリックする。
 
@@ -57,3 +61,21 @@
 
 <img src="images/inviteTA.png" width="320px">
 <img src="images/add_student.png" width="320px">
+
+### テンプレートリポジトリを作成する
+1. [リポジトリ作成ページ](https://github.com/new)にアクセスする。
+2. 「Owner」は作成したorganizationを選択し、「Add a README file」にチェックを入れ、その他リポジトリ名などは適当に入力する。
+3. 「Create repository」をクリックする。
+
+<img src="images/new_repository.png" width="320px">
+
+4. リポジトリのページに遷移するので、「Setting」をクリックし、「Template repository」にチェックを入れる。
+
+<img src="images/repository_top.png" width="320px">
+<img src="images/check_template.png" width="320px">
+
+### テストの生成とリポジトリへのプッシュ
+
+### assignmentを作成する
+
+### 授業のやり方
