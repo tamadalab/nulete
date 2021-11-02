@@ -7,6 +7,12 @@ cmd/assets/gentests.jar: gentests/build.gradle gentests/src/main/java/*.java
 
 build: nulete
 
+install: build
+	sudo cp nulete /usr/local/bin/nulete
+
+uninstall:
+	sudo rm -f /usr/local/bin/nulete
+
 clean:
 	go clean
 	gradle -p gentests clean
