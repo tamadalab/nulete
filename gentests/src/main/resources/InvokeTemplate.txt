@@ -1,0 +1,5 @@
+
+        this.stdOutCaptureStart();
+        %s.%s(%s);
+        assertEquals(this.getStdOut(), %s);
+
