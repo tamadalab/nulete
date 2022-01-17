@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
@@ -28,7 +29,9 @@ public class GenerateTest {
                 JSONArray testcase = ety.getValue();
 
                 Class<?> c = loader.loadClass(className);
-                Object instance = c.getDeclaredConstructor().newInstance();
+                Constructor constructor = c.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                Object instance = constructor.newInstance();
 
                 TestClassBuilder builder = new TestClassBuilder(className);
 
