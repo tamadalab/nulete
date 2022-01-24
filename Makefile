@@ -1,3 +1,5 @@
+VERSION := 0.1.0
+
 nulete: cmd/assets/gentests.jar main.go cmd/*.go cmd/assets/*
 	go build -o nulete main.go
 
@@ -16,4 +18,14 @@ uninstall:
 clean:
 	go clean
 	gradle -p gentests clean
-	rm cmd/assets/gentests.jar
+	rm -f cmd/assets/gentests.jar
+
+distclean: clean
+	rm -rf dist
+
+dist: build
+	mkdir -p dist/darwin-amd64/nulete-${VERSION}/bin
+	cp nulete dist/darwin-amd64/nulete-${VERSION}/bin
+	cp -r doc dist/darwin-amd64/nulete-${VERSION}/
+	cp LICENSE README.md dist/darwin-amd64/nulete-${VERSION}/
+	tar cvfz dist/nulete-${VERSION}-darwin-amd64.tar.gz -C dist/darwin-amd64 nulete-${VERSION}
