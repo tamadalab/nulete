@@ -147,6 +147,10 @@ func gentestsCmdRun() error {
 		return err
 	}
 
+	if err := overwriteCopy(filepath.Join(tmpDir, "autograding.json"), filepath.Join(firstDir, ".github", "classroom", "autograding.json")); err != nil {
+		return err
+	}
+
 	return nil
 }
 

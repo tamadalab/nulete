@@ -1,13 +1,12 @@
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 public class ArgsParser {
-    public static Object[] parseMethodArgs(Method m, JSONArray args)
-            throws JSONException, Exception {
+    public static Object[] parseMethodArgs(Method m, JSONArray args) throws JSONException, Exception {
         Class<?>[] types = m.getParameterTypes();
 
         if (types.length != args.length()) {

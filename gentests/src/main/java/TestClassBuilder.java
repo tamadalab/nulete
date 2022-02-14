@@ -1,7 +1,7 @@
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class TestClassBuilder {
@@ -13,34 +13,18 @@ public class TestClassBuilder {
         this.testMethodSB = new StringBuilder();
     }
 
-    public void addTestMethod(InvokeResults results) {
-        if (results.argsAndStdOut.isEmpty()) {
-            return;
-        }
-
+    public void addTestMethod(String testName, List<Result> results) {
         String invokeTemplate = this.readResource("InvokeTemplate.txt");
         String testMethodTemplate = this.readResource("TestMethodTemplate.txt");
-        String receiver;
-        String methodName = results.methodName;
         StringBuilder invokeSB = new StringBuilder();
 
-        if (results.isStatic) {
-            receiver = this.className;
-        } else {
-            invokeSB.append(
-                    String.format(
-                            "\n        %s instance = new %s();\n", this.className, this.className));
-            receiver = "instance";
+        for (Result r : results) {
+            String receiver = r.isStatic() ? this.className : String.format("new %s()", this.className);
+            invokeSB.append(String.format(invokeTemplate, r.rawStdIn(), receiver, r.methodName(), r.argsString(),
+                    r.rawStdOut(), r.rawComment()));
         }
 
-        for (Map.Entry<String, String> ety : results.argsAndStdOut.entrySet()) {
-            String args = ety.getKey();
-            String stdOut = ety.getValue();
-            invokeSB.append(
-                    String.format(invokeTemplate, receiver, methodName, args, stdOut));
-        }
-
-        this.testMethodSB.append(String.format(testMethodTemplate, methodName + "Test", invokeSB));
+        this.testMethodSB.append(String.format(testMethodTemplate, testName, invokeSB));
     }
 
     public String toString() {

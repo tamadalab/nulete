@@ -1,7 +1,4 @@
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -11,65 +8,64 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GenerateTest {
     private void run() {
         PrintStream defaultStdOut = System.out;
+
         try {
             TargetClassLoader loader = new TargetClassLoader();
-            Map<String, JSONArray> testcases = this.getTestCases();
+            AutogradingJsonBuilder ajb = new AutogradingJsonBuilder();
 
-            for (Map.Entry<String, JSONArray> ety : testcases.entrySet()) {
-                String className = ety.getKey();
-                JSONArray testcase = ety.getValue();
+            for (String jsonFileName : this.getJsonFileNames()) {
+                TestCases tcs = TestCases.fromJsonFile(jsonFileName);
 
-                Class<?> c = loader.loadClass(className);
-                Constructor constructor = c.getDeclaredConstructor();
+                Class<?> c = loader.loadClass(tcs.className());
+                Constructor<?> constructor = c.getDeclaredConstructor();
                 constructor.setAccessible(true);
-                Object instance = constructor.newInstance();
 
-                TestClassBuilder builder = new TestClassBuilder(className);
+                TestClassBuilder tcb = new TestClassBuilder(tcs.className());
 
-                for (Method m : c.getDeclaredMethods()) {
-                    String methodName = m.getName();
-                    Boolean isStatic = Modifier.isStatic(m.getModifiers());
-                    m.setAccessible(true);
+                for (TestCase tc : tcs.testCases()) {
+                    List<Result> results = new ArrayList<>();
 
-                    InvokeResults results = new InvokeResults(methodName, isStatic);
+                    for (TestItem ti : tc.testItems()) {
+                        for (Method m : c.getDeclaredMethods()) {
+                            if (!ti.method().equals(m.getName())) {
+                                continue;
+                            }
 
-                    for (Object o : testcase) {
-                        JSONObject jsonObj = (JSONObject) o;
-                        String targetMethodName = jsonObj.getString("method");
+                            m.setAccessible(true);
 
-                        if (!methodName.equals(targetMethodName)) {
-                            continue;
+                            Boolean isStatic = Modifier.isStatic(m.getModifiers());
+                            Object[] args = ArgsParser.parseMethodArgs(m, ti.args());
+                            System.setIn(new ByteArrayInputStream(ti.stdin().getBytes()));
+                            ByteArrayOutputStream baos = this.stdOutCaptureStart();
+
+                            if (isStatic) {
+                                m.invoke(null, args);
+                            } else {
+                                m.invoke(constructor.newInstance(), args);
+                            }
+
+                            results.add(Result.fromObjectArgsAndNotRawString(ti.method(), isStatic, args, ti.stdin(),
+                                    baos.toString(), ti.comment()));
+                            break;
                         }
-
-                        Object[] args = ArgsParser.parseMethodArgs(m, jsonObj.getJSONArray("args"));
-
-                        ByteArrayOutputStream baos = this.stdOutCaptureStart();
-
-                        if (isStatic) {
-                            m.invoke(null, args);
-                        } else {
-                            m.invoke(instance, args);
-                        }
-
-                        System.setOut(defaultStdOut);
-
-                        results.add(args, baos.toString());
                     }
 
-                    builder.addTestMethod(results);
+                    ajb.addTest(tc.name(), tcs.className(), tc.testName(), tc.timeout(), tc.point());
+                    tcb.addTestMethod(tc.testName(), results);
                 }
 
-                Files.writeString(Path.of(className + "Test.java"), builder.toString());
+                Files.writeString(Path.of(tcs.className() + "Test.java"), tcb.toString());
             }
+
+            Files.writeString(Path.of("autograding.json"), ajb.toString());
 
         } catch (Exception e) {
             System.setOut(defaultStdOut);
@@ -78,22 +74,8 @@ public class GenerateTest {
         }
     }
 
-    private Map<String, JSONArray> getTestCases() throws IOException, JSONException {
-        File currentDir = new File(".");
-        Map<String, JSONArray> testcases = new HashMap<>();
-        for (String jsonFileName : this.getJsonFileNames(currentDir)) {
-            String targetClassName = jsonFileName.replace(".json", "");
-            String jsonString = Files.readString(Path.of(jsonFileName));
-            testcases.put(targetClassName, new JSONArray(jsonString));
-        }
-
-        return testcases;
-    }
-
-    private List<String> getJsonFileNames(File dir) throws IOException {
-        return Stream.of(dir.listFiles())
-                .map(file -> file.getName())
-                .filter(name -> name.endsWith(".json"))
+    private List<String> getJsonFileNames() throws IOException {
+        return Stream.of(new File(".").listFiles()).map(file -> file.getName()).filter(name -> name.endsWith(".json"))
                 .collect(Collectors.toList());
     }
 

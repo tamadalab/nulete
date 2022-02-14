@@ -1,4 +1,4 @@
-VERSION := 0.1.0
+VERSION := 0.2.0
 
 nulete: cmd/assets/gentests.jar main.go cmd/*.go cmd/assets/*
 	go build -o nulete main.go

@@ -23,5 +23,6 @@ test {
 
     testLogging {
         events "passed", "failed"
+        exceptionFormat "full"
     }
 }

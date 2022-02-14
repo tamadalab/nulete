@@ -51,3 +51,54 @@ SELECT-OPTIONS
    --source-dir      模範解答プログラムの指定
    --testcase-dir    テストケースの指定
 ```
+
+# v0.2.0での変更
+標準入力や，答えが間違っていた時のコメントにも対応した．
+また，テストの名前やタイムアウト，配点についてもJSON形式の設定ファイルに記述することで，GitHub Classroomでの設定の簡素化と，より柔軟な採点を実現した．
+
+JSON形式の設定ファイルの例
+```json
+[
+    {
+        "name": "first test",
+        "timeout": 5,
+        "point": 10,
+        "tests": [
+            {
+                "method": "main",
+                "args": [
+                    [
+                        "hoge",
+                        "fuga"
+                    ]
+                ],
+                "stdin": [
+                    "foo",
+                    "bar"
+                ],
+                "comment": "something wrong!"
+            },
+            {
+                "method": "run",
+                "args": [
+                    []
+                ]
+            }
+        ]
+    },
+    {
+        "name": "second test",
+        "point": 5,
+        "tests": [
+            {
+                "method": "main",
+                "args": [
+                    [
+                        "piyo"
+                    ]
+                ]
+            }
+        ]
+    }
+]
+```
